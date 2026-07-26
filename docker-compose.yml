@@ -1,0 +1,54 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: codebase-assistant-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: codebase-assistant-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  vector-service:
+    build: ./vector-service
+    container_name: codebase-assistant-vector-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - vector-data:/app/data
+
+  embedding-service:
+    build: ./embedding-service
+    container_name: codebase-assistant-embedding-service
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    volumes:
+      # Caches the downloaded sentence-transformers model so it survives
+      # container restarts instead of re-downloading every time.
+      - embedding-model-cache:/root/.cache/huggingface
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: codebase-assistant-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  mongo-data:
+  redis-data:
+  vector-data:
+  embedding-model-cache:
+  ollama-data:
